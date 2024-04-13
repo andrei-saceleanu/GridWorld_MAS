@@ -21,6 +21,8 @@ class GridWorld(gym.Env):
         self.curr_pos = [self.h//2, 0]
         self.type = cfg["world_type"]
         self.goal = [3, 7]
+        self.max_steps = 60
+        self.curr_steps = 0
 
         if self.type == "A":
             self.obstacles = [[i, 5] for i in range(1, 5)]
@@ -31,6 +33,7 @@ class GridWorld(gym.Env):
 
     def reset(self, seed=None, **kwargs):
 
+        self.curr_steps = 0
         self.curr_pos = [self.h//2, 0]
         return self.w * self.curr_pos[0] + self.curr_pos[1], {}
     
@@ -44,14 +47,18 @@ class GridWorld(gym.Env):
             self.curr_pos[1] + self.dx[action]
         ]
         if check_inside(next_pos[0], next_pos[1], self.h, self.w) and next_pos not in self.obstacles:
+            self.prev_pos = self.curr_pos
             self.curr_pos = next_pos
 
         reward = -1
         done = False
         truncated = False
+        self.curr_steps += 1
         if self.curr_pos == self.goal:
             reward = 1
             done = True
+        elif self.curr_steps >= self.max_steps:
+            truncated = True
 
         return self.w * self.curr_pos[0] + self.curr_pos[1], reward, done, truncated, {}
     
@@ -68,10 +75,11 @@ class GridWorld(gym.Env):
         reward = -1
         done = False
         truncated = False
+        self.curr_steps += 1
         if self.curr_pos == self.goal:
             reward = 1
             done = True
+        elif self.curr_steps >= self.max_steps:
+            truncated = True
 
         return self.w * self.curr_pos[0] + self.curr_pos[1], reward, done, truncated, {}
-
-
