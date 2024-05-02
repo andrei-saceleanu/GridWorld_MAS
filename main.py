@@ -19,7 +19,7 @@ def plot_for_env(env_name, q_tr, q_te, sarsa_tr, sarsa_te, dq_tr, dq_te):
     plt.savefig(f"{env_name}.png")
     plt.close()
     
-def getPolicies(qQ, sQ, dqQ, cfg):
+def getPolicies(qQ, sQ, dqQ, cfg, world):
     mapqQ = np.argmax(qQ, axis=1)
     mapqQ = mapqQ.reshape(cfg["world_size"][0], cfg["world_size"][1]) # they are reversed
     mapsQ = np.argmax(sQ, axis=1)
@@ -50,7 +50,7 @@ def getPolicies(qQ, sQ, dqQ, cfg):
         ax.set_xlabel('Columns')
         ax.set_ylabel('Rows')
     plt.tight_layout()
-    plt.savefig("Policies.jpeg")
+    plt.savefig(f"Policies_{world}.jpeg")
     plt.show()
     plt.close()
     
@@ -59,7 +59,7 @@ def main():
     cfg = {
         "num_actions": 4,
         "world_size": [7, 10],
-        "world_type": "A"
+        "world_type": "B"
     }
     env = GridWorld(cfg=cfg)
 
@@ -79,14 +79,14 @@ def main():
         elif name == "Double Q-Learning":
             dq_tr, dq_te, dqlens, dqQ = double_q_learning(env, gamma, epsilon, alpha, num_steps, eval_iter)
 
-    getPolicies(qQ, sQ, dqQ, cfg)
-    plot_for_env("GridWorld_A", q_tr, q_te, sarsa_tr, sarsa_te, dq_tr, dq_te)
+    getPolicies(qQ, sQ, dqQ, cfg, cfg['world_type'])
+    plot_for_env(f"GridWorld_{cfg['world_type']}", q_tr, q_te, sarsa_tr, sarsa_te, dq_tr, dq_te)
     plt.figure()
     plt.plot(list(range(len(qlens))), qlens, label="Q lengths")
     plt.plot(list(range(len(slens))), slens, label="SARSA lengths")
     plt.plot(list(range(len(dqlens))), dqlens, label="Double Q lengths")
     plt.legend()
-    plt.savefig("ep_lens.png")
+    plt.savefig(f"ep_lens_{cfg['world_type']}.png")
     plt.close()
 
 if __name__=="__main__":

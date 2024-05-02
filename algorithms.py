@@ -117,9 +117,9 @@ def double_q_learning(env, gamma, epsilon, alpha, iterations, _evaluation_step =
 
             total_reward += reward
             if random.random() < 0.5:
-                Q1[state, action] += alpha * (reward + Q1[next_state, np.argmax(Q2[next_state])] - Q1[state, action])
+                Q1[state, action] += alpha * (reward + gamma * Q1[next_state, np.argmax(Q2[next_state])] - Q1[state, action])
             else:
-                Q2[state, action] += alpha * (reward + Q2[next_state, np.argmax(Q1[next_state])] - Q2[state, action])
+                Q2[state, action] += alpha * (reward + gamma * Q2[next_state, np.argmax(Q1[next_state])] - Q2[state, action])
             state = next_state
             ep_len += 1
 

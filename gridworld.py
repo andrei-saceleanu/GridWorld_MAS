@@ -21,13 +21,14 @@ class GridWorld(gym.Env):
         self.curr_pos = [self.w//2, 0]
         self.type = cfg["world_type"]
         self.goal = [self.w//2, 7]
-        self.max_steps = 60
         self.curr_steps = 0
 
         if self.type == "A":
             self.obstacles = [[i, 5] for i in range(1, 5)]
+            self.max_steps = 60 
         elif self.type == "B":
             self.wind = [0, 0, 0, 1, 1, 1, 2, 2, 1, 0]
+            self.max_steps = 150 
 
         self.step_func = self.a_step if self.type == "A" else self.b_step
 
@@ -63,15 +64,14 @@ class GridWorld(gym.Env):
         return self.h * self.curr_pos[0] + self.curr_pos[1], reward, done, truncated, {}
     
     def b_step(self, action):
-
         next_pos = [
-            self.curr_pos[0] + self.dy[action],
-            self.curr_pos[1] + self.dx[action]
+            self.curr_pos[0] + self.dx[action],
+            self.curr_pos[1] + self.dy[action]
         ]
-        next_pos[0] -= self.wind[self.curr_pos[1]]
         if check_inside(next_pos[0], next_pos[1], self.w, self.h):
+            next_pos[0] -= self.wind[next_pos[1]]
+            next_pos[0] = max(0, next_pos[0])
             self.curr_pos = next_pos
-
         reward = -1
         done = False
         truncated = False
@@ -81,4 +81,4 @@ class GridWorld(gym.Env):
             done = True
         elif self.curr_steps >= self.max_steps:
             truncated = True
-        return self.w * self.curr_pos[0] + self.curr_pos[1], reward, done, truncated, {}
+        return self.h * self.curr_pos[0] + self.curr_pos[1], reward, done, truncated, {}
