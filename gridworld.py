@@ -14,29 +14,38 @@ class GridWorld(gym.Env):
             self.dx = [0, 1, 0, -1]
             self.dy = [-1, 0, 1, 0]
         else:
-            self.dy = [-1, -1, 0, 1, 1, 1, 0, -1]
             self.dx = [0, 1, 1, 1, 0, -1, -1, -1]
-        self.w, self.h = cfg["world_size"][0], cfg["world_size"][1]
+            self.dy = [-1, -1, 0, 1, 1, 1, 0, -1]
+            
+        self.h, self.w = cfg["world_size"][0], cfg["world_size"][1]
         self.observation_space = gym.spaces.Discrete(self.w * self.h)
-        self.curr_pos = [self.w//2, 0]
+        self.start_states = [
+            [0, self.h//2],
+            [2, self.h-1],
+            [self.w, self.h//2-1]
+        ]
+        self.start_state_idx = cfg["start_state_idx"]
+        self.curr_pos = self.start_states[self.start_state_idx]
         self.type = cfg["world_type"]
-        self.goal = [self.w//2, 7]
+        self.goal = [7, self.h//2]
         self.curr_steps = 0
 
         if self.type == "A":
-            self.obstacles = [[i, 5] for i in range(1, 5)]
+            self.obstacles = [[5, i] for i in range(1, 5)]
             self.max_steps = 60 
         elif self.type == "B":
             self.wind = [0, 0, 0, 1, 1, 1, 2, 2, 1, 0]
             self.max_steps = 150 
+
+        self.start_states
 
         self.step_func = self.a_step if self.type == "A" else self.b_step
 
     def reset(self, seed=None, **kwargs):
 
         self.curr_steps = 0
-        self.curr_pos = [self.w//2, 0]
-        return self.w * self.curr_pos[0] + self.curr_pos[1], {}
+        self.curr_pos = self.start_states[self.start_state_idx]
+        return self.w * self.curr_pos[1] + self.curr_pos[0], {}
     
     def step(self, action):
         return self.step_func(action)
@@ -61,7 +70,7 @@ class GridWorld(gym.Env):
         elif self.curr_steps >= self.max_steps:
             truncated = True
 
-        return self.h * self.curr_pos[0] + self.curr_pos[1], reward, done, truncated, {}
+        return self.w * self.curr_pos[1] + self.curr_pos[0], reward, done, truncated, {}
     
     def b_step(self, action):
         next_pos = [
@@ -69,8 +78,8 @@ class GridWorld(gym.Env):
             self.curr_pos[1] + self.dy[action]
         ]
         if check_inside(next_pos[0], next_pos[1], self.w, self.h):
-            next_pos[0] -= self.wind[next_pos[1]]
-            next_pos[0] = max(0, next_pos[0])
+            next_pos[1] -= self.wind[next_pos[0]]
+            next_pos[1] = max(0, next_pos[1])
             self.curr_pos = next_pos
         reward = -1
         done = False
@@ -81,4 +90,4 @@ class GridWorld(gym.Env):
             done = True
         elif self.curr_steps >= self.max_steps:
             truncated = True
-        return self.h * self.curr_pos[0] + self.curr_pos[1], reward, done, truncated, {}
+        return self.w * self.curr_pos[1] + self.curr_pos[0], reward, done, truncated, {}
