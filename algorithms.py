@@ -69,7 +69,7 @@ def q_learning(env, gamma, epsilon, alpha, iterations, _evaluation_step = 100):
 
         ep_len = 0
         while not done:
-            action = eps_greedy_policy(env, Q, state, epsilon)
+            action = eps_greedy_policy(env, Q, state, epsilon * (iterations - i)/iterations) #decay
 
             next_state, reward, terminated, truncated, _ = env.step(action)
             done = terminated or truncated
@@ -110,7 +110,7 @@ def double_q_learning(env, gamma, epsilon, alpha, iterations, _evaluation_step =
 
         ep_len = 0
         while not done:
-            action = eps_greedy_policy_dql(env, Q1, Q2, state, epsilon)
+            action = eps_greedy_policy_dql(env, Q1, Q2, state, epsilon * (iterations - i)/iterations)
 
             next_state, reward, terminated, truncated, _ = env.step(action)
             done = terminated or truncated
@@ -150,11 +150,11 @@ def sarsa(env, gamma, epsilon, alpha, iterations, eval_iter = 100):
         done = False
         total_reward = 0
 
-        action = eps_greedy_policy(env, Q, state, epsilon)
+        action = eps_greedy_policy(env, Q, state, epsilon * (iterations - i)/iterations)
         ep_len = 0
         while not done:
             next_state, reward, terminated, truncated, _ = env.step(action)
-            next_action = eps_greedy_policy(env, Q, next_state, epsilon)
+            next_action = eps_greedy_policy(env, Q, next_state, epsilon * (iterations - i)/iterations)
             done = terminated or truncated
 
             total_reward += reward
