@@ -22,12 +22,13 @@ class GridWorld(gym.Env):
         self.start_states = [
             [0, self.h//2],
             [2, self.h-1],
-            [self.w, self.h//2-1]
+            # [1, 0]
+            [self.w - 1, self.h//2-1]
         ]
         self.start_state_idx = cfg["start_state_idx"]
         self.cfg = cfg
         if cfg["task3"]:
-            self.curr_pos = [self.start_states[self.start_state_idx] for _ in range(3)]
+            self.curr_pos = [self.start_states[i] for i in range(3)]
         else:
             self.curr_pos = self.start_states[self.start_state_idx]
         self.type = cfg["world_type"]
@@ -49,7 +50,7 @@ class GridWorld(gym.Env):
 
         self.curr_steps = 0
         if self.cfg["task3"]:
-            self.curr_pos = [self.start_states[self.start_state_idx] for _ in range(3)]
+            self.curr_pos = [self.start_states[i] for i in range(3)]
         else:
             self.curr_pos = self.start_states[self.start_state_idx]
         return self.w * self.curr_pos[1] + self.curr_pos[0], {}

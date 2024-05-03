@@ -110,7 +110,7 @@ def main():
     names = ["Q-Learning", "SARSA", "Double Q-Learning"]
 
     gamma = 0.999
-    num_steps = 30000
+    num_steps = 100_000 # for task3
     eval_iter = 100
     eps_list = [0.1, 0.3, 0.5]
     alpha_list = [0.45, 0.75, 0.9]
@@ -121,6 +121,7 @@ def main():
         q_tr, q_te, qlens, qQ = q_learning_3_ag(env, gamma,  epsilon, alpha, num_steps, eval_iter)
         filename_data = {"dir": "images", "start": cfg["start_state_idx"], "eps": epsilon, "alpha": alpha}
         plot_one(f"GridWorld_{cfg['world_type']}" + ("" if not cfg['task3'] else "_task3"), q_tr, q_te, cfg["num_actions"], filename_data)
+        print(q_tr[-1])
     else:
         for epsilon, alpha in product(eps_list, alpha_list):
             print(f"EPS={epsilon}; ALPHA={alpha}")
