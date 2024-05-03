@@ -67,9 +67,9 @@ def main():
     names = ["Q-Learning", "SARSA", "Double Q-Learning"]
 
     gamma = 0.9
-    epsilon = 0.1
+    epsilon = 0.3
     alpha = 0.9
-    num_steps = 15000
+    num_steps = 20000
     eval_iter = 100
     for name in names:
         if name == "Q-Learning":
