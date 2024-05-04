@@ -200,11 +200,11 @@ def sarsa(env, gamma, epsilon, alpha, iterations, eval_iter = 100):
 
     return train_rewards, test_rewards, lens, Q
 
-def q_learning_3_ag(env, gamma, epsilon, alpha, iterations, _evaluation_step = 100):
+def q_learning_3_ag(env, gamma, epsilon, alpha, iterations, _evaluation_step = 1000):
     
-    Q1 = np.zeros((env.observation_space.n, env.action_space.n))
-    Q2 = np.zeros((env.observation_space.n, env.action_space.n))
-    Q3 = np.zeros((env.observation_space.n, env.action_space.n))
+    combs = env.observation_space.n * env.observation_space.n * env.observation_space.n
+    ac_combs = env.action_space.n * env.action_space.n * env.action_space.n
+    Q1 = np.zeros((combs, ac_combs))
 
     train_rewards = []
     crt_rewards = []
@@ -213,32 +213,29 @@ def q_learning_3_ag(env, gamma, epsilon, alpha, iterations, _evaluation_step = 1
     lens = []
 
     for i in tqdm(range(iterations)):
-        state = env.reset()
-        state = [state[0][0] for _ in range(3)] 
+        state, _ = env.reset()
+        state = state[0] * env.observation_space.n * env.observation_space.n  + state[1] * env.observation_space.n + state[2]
         done = False
         total_reward = 0
-
+        terminated = [False, False, False]
         ep_len = 0
         while not done:
-            action1 = eps_greedy_policy(env, Q1, state[0], epsilon * (iterations - i)/iterations) #decay
-            action2 = eps_greedy_policy(env, Q2, state[1], epsilon * (iterations - i)/iterations) #decay
-            action3 = eps_greedy_policy(env, Q3, state[2], epsilon * (iterations - i)/iterations) #decay
-            next_state, reward, terminated, truncated, _ = env.step([action1, action2, action3])
-            done = all(terminated) or truncated
-            total_reward += sum(reward) / len(reward)
-            Q1[state[0], action1] = (1- alpha) * Q1[state[0], action1] + alpha * (reward[0] + gamma * np.max(Q1[next_state[0]]))
-            Q2[state[1], action2] = (1- alpha) * Q2[state[1], action2] + alpha * (reward[1] + gamma * np.max(Q2[next_state[1]]))
-            Q3[state[2], action3] = (1- alpha) * Q3[state[2], action3] + alpha * (reward[2] + gamma * np.max(Q3[next_state[2]]))
+            action1 = eps_greedy_policy(env, Q1, state, epsilon * (iterations - i)/iterations) #decay
+            next_state, reward, terminated, truncated, _ = env.step(action1)
+            next_state = next_state[0] * env.observation_space.n * env.observation_space.n  + next_state[1] * env.observation_space.n + next_state[2]
+            
+            done = terminated or truncated
+            total_reward += reward
+            Q1[state, action1] = (1- alpha) * Q1[state, action1] + alpha * (reward + gamma * np.max(Q1[next_state]))
             state = next_state
             ep_len += 1
 
 
         if i % _evaluation_step == 0 and i != 0:
-            test_rewards.append(simulate_policy_3ag(env, [Q1, Q2, Q3], iterations=_evaluation_step))
+            # test_rewards.append(simulate_policy_3ag(env, [Q1, Q2, Q3], iterations=_evaluation_step))
             train_rewards.append(np.mean(crt_rewards[-_evaluation_step:]))
             lens.append(np.mean(ep_lens[-_evaluation_step:]))
             
         crt_rewards.append(total_reward)
         ep_lens.append(ep_len)
-
-    return train_rewards, test_rewards, lens, [Q1, Q2, Q3]
+    return train_rewards, test_rewards, lens, [Q1]

@@ -22,8 +22,8 @@ class GridWorld(gym.Env):
         self.start_states = [
             [0, self.h//2],
             [2, self.h-1],
-            # [1, 0]
-            [self.w - 1, self.h//2-1]
+            [1, 0]
+            # [self.w - 1, self.h//2-1]
         ]
         self.start_state_idx = cfg["start_state_idx"]
         self.cfg = cfg
@@ -37,7 +37,10 @@ class GridWorld(gym.Env):
 
         if self.type == "A":
             self.obstacles = [[5, i] for i in range(1, 5)]
-            self.max_steps = 200 
+            if cfg["task3"]:
+                self.max_steps = 500
+            else:
+                self.max_steps = 100
         elif self.type == "B":
             self.wind = [0, 0, 0, 1, 1, 1, 2, 2, 1, 0]
             self.max_steps = 400 
@@ -51,44 +54,62 @@ class GridWorld(gym.Env):
         self.curr_steps = 0
         if self.cfg["task3"]:
             self.curr_pos = [self.start_states[i] for i in range(3)]
+            return [self.w * curr_pos[1] + curr_pos[0] for curr_pos in self.curr_pos], {}
         else:
             self.curr_pos = self.start_states[self.start_state_idx]
-        return self.w * self.curr_pos[1] + self.curr_pos[0], {}
+            return self.w * self.curr_pos[1] + self.curr_pos[0], {}
     
     def step(self, action):
         return self.step_func(action)
     
+    def number_to_list(self, n):
+        base4_representation = self.decimal_to_base4(n).zfill(3)
+        return [int(digit) for digit in base4_representation]
+
+    def decimal_to_base4(self, n):
+        if n == 0:
+            return "0"
+        
+        result = ""
+        while n > 0:
+            remainder = n % 4
+            result = str(remainder) + result
+            n //= 4
+        
+        return result
+    
     def a_step(self, action):
         if self.cfg["task3"]:
-            reward = [-1, -1, -1]
-            done = [False, False, False]
+            reward = -3
+            done = False
+            truncated = False
             finishedNow = 0
-            for i in range(len(action)):
+            actions = self.number_to_list(action)
+            for i in range(len(actions)):
                 if self.curr_pos[i] == self.goal:
-                    reward[i] = 0
-                    done[i] = True
+                    reward += 1
                     continue
                 next_pos = [
-                    self.curr_pos[i][0] + self.dx[action[i]],
-                    self.curr_pos[i][1] + self.dy[action[i]]
+                    self.curr_pos[i][0] + self.dx[actions[i]],
+                    self.curr_pos[i][1] + self.dy[actions[i]]
                 ]
                 if check_inside(next_pos[0], next_pos[1], self.w, self.h) and next_pos not in self.obstacles:
                     # self.prev_pos[i] = self.curr_pos[i]
                     self.curr_pos[i] = next_pos
 
-                # done = False
-                truncated = False
-                self.curr_steps += 1
-                
                 if self.curr_pos[i] == self.goal:
-                    reward[i] = 0.5
-                    done[i] = True
+                    reward += 0.5 + 1 # ignore previous -1
                     finishedNow += 1
-                elif self.curr_steps >= self.max_steps:
-                    truncated = True
-            if finishedNow == len(action):
-                reward = [10, 10, 10]
-            return [self.w * self.curr_pos[i][1] + self.curr_pos[i][0] for i in range(len(action))], reward, done, truncated, {}
+            if self.curr_steps > self.max_steps:
+                truncated = True
+            self.curr_steps += 1
+            if finishedNow == len(actions):
+                done = True
+                print("ALL together")
+                reward += 10 - 1.5 # decrease the 0.5 of each agent
+            # if reward != -3:
+                # print(reward)
+            return [self.w * self.curr_pos[i][1] + self.curr_pos[i][0] for i in range(len(actions))], reward, done, truncated, {}
         else:
             next_pos = [
                 self.curr_pos[0] + self.dx[action],
