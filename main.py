@@ -116,7 +116,7 @@ def main():
     alpha_list = [0.45, 0.75, 0.9]
     os.makedirs("images", exist_ok=True)
     if cfg['task3']:
-        num_steps = 100_000 # for task3
+        num_steps = 1_000_000 # for task3
         eval_iter = 100# for task3
         epsilon = eps_list[0]
         alpha = alpha_list[2]

@@ -38,7 +38,7 @@ class GridWorld(gym.Env):
         if self.type == "A":
             self.obstacles = [[5, i] for i in range(1, 5)]
             if cfg["task3"]:
-                self.max_steps = 500
+                self.max_steps = 200
             else:
                 self.max_steps = 100
         elif self.type == "B":
@@ -83,11 +83,13 @@ class GridWorld(gym.Env):
             reward = -3
             done = False
             truncated = False
+            dones = [False, False, False]
             finishedNow = 0
             actions = self.number_to_list(action)
             for i in range(len(actions)):
                 if self.curr_pos[i] == self.goal:
                     reward += 1
+                    dones[i] = True
                     continue
                 next_pos = [
                     self.curr_pos[i][0] + self.dx[actions[i]],
@@ -103,6 +105,8 @@ class GridWorld(gym.Env):
             if self.curr_steps > self.max_steps:
                 truncated = True
             self.curr_steps += 1
+            if all(dones):
+                done = True
             if finishedNow == len(actions):
                 done = True
                 print("ALL together")
