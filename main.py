@@ -10,7 +10,6 @@ from itertools import product
 def plot_for_env(env_name, q_tr, q_te, sarsa_tr, sarsa_te, dq_tr, dq_te, num_actions, filename_data):
     plt.figure()
     fig, ax = plt.subplots(1, 2, sharey=True)
-    fig.suptitle(env_name)
     ax[0].plot(list(range(len(q_tr))), q_tr, label="Q-Learning train")
     ax[0].plot(list(range(len(sarsa_tr))), sarsa_tr, label="SARSA train")
     ax[0].plot(list(range(len(dq_tr))), dq_tr, label="Double Q-Learning train")
@@ -21,6 +20,7 @@ def plot_for_env(env_name, q_tr, q_te, sarsa_tr, sarsa_te, dq_tr, dq_te, num_act
     ax[1].legend(loc="lower right")
     image_folder = filename_data["dir"]
     x = {k:v for k,v in filename_data.items() if k!="dir"}
+    fig.suptitle(f"{env_name}_{num_actions}_{'_'.join([k+'='+str(v) for k,v in x.items()])}")
     plt.savefig(os.path.join(image_folder, f"{env_name}_{num_actions}_{'_'.join([k+'='+str(v) for k,v in x.items()])}.png"))
     plt.close()
 
@@ -32,6 +32,7 @@ def plot_lens(cfg, qlens, slens, dqlens, num_actions, filename_data):
     plt.legend()
     image_folder = filename_data["dir"]
     x = {k:v for k,v in filename_data.items() if k!="dir"}
+    plt.title(f"{cfg['world_type']}_{num_actions}_{'_'.join([k+'='+str(v) for k,v in x.items()])}")
     plt.savefig(os.path.join(image_folder, f"ep_lens_{cfg['world_type']}_{num_actions}_{'_'.join([k+'='+str(v) for k,v in x.items()])}.png"))
     plt.close()
     
@@ -79,16 +80,17 @@ def getPolicies(qQ, sQ, dqQ, cfg, world, num_actions, filename_data):
     plt.tight_layout()
     image_folder = filename_data["dir"]
     x = {k:v for k,v in filename_data.items() if k!="dir"}
+    fig.suptitle(f"{world}_{num_actions}_{'_'.join([k+'='+str(v) for k,v in x.items()])}")
     plt.savefig(os.path.join(image_folder, f"policies_{world}_{num_actions}_{'_'.join([k+'='+str(v) for k,v in x.items()])}.png"))
     plt.close()
     
 def main():
 
     cfg = {
-        "num_actions": 8,
+        "num_actions": 4,
         "world_size": [7, 10],
-        "world_type": "B",
-        "start_state_idx": 0
+        "world_type": "A",
+        "start_state_idx": 2
     }
     env = GridWorld(cfg=cfg)
 
