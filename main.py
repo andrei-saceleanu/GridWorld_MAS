@@ -47,6 +47,15 @@ def plot_lens(cfg, qlens, slens, dqlens, num_actions, filename_data):
     x = {k:v for k,v in filename_data.items() if k!="dir"}
     plt.savefig(os.path.join(image_folder, f"ep_lens_{cfg['world_type']}_{num_actions}_{'_'.join([k+'='+str(v) for k,v in x.items()])}.png"))
     plt.close()
+
+def plot_lens_one(cfg, qlens, num_actions, filename_data):
+    plt.figure()
+    plt.plot(list(range(len(qlens))), qlens, label="Q lengths")
+    plt.legend()
+    image_folder = filename_data["dir"]
+    x = {k:v for k,v in filename_data.items() if k!="dir"}
+    plt.savefig(os.path.join(image_folder, f"task3_{cfg['approach']}_ep_lens_{cfg['world_type']}_{num_actions}_{'_'.join([k+'='+str(v) for k,v in x.items()])}.png"))
+    plt.close()
     
 def getPolicies(qQ, sQ, dqQ, cfg, world, num_actions, filename_data):
     mapqQ = np.argmax(qQ, axis=1)
@@ -102,7 +111,8 @@ def main():
         "world_size": [7, 10],
         "world_type": "A",
         "start_state_idx": 0,
-        "task3": True
+        "task3": False,
+        "approach": 1
     }
     env = GridWorld(cfg=cfg)
 
@@ -120,9 +130,14 @@ def main():
         eval_iter = 100# for task3
         epsilon = eps_list[0]
         alpha = alpha_list[2]
-        q_tr, q_te, qlens, qQ = q_learning_3_ag(env, 0.9,  epsilon, alpha, num_steps, eval_iter)
-        filename_data = {"dir": "images", "start": cfg["start_state_idx"], "eps": epsilon, "alpha": alpha}
-        plot_one(f"GridWorld_{cfg['world_type']}" + ("" if not cfg['task3'] else "_task3"), q_tr, q_te, cfg["num_actions"], filename_data)
+        if cfg['approach'] == 1:
+            q_tr, q_te, qlens, qQ = q_learning_3_ag_old(env, 0.9,  epsilon, alpha, num_steps, eval_iter)
+        else:
+            q_tr, q_te, qlens, qQ = q_learning_3_ag(env, 0.9,  epsilon, alpha, num_steps, eval_iter)
+        
+        filename_data = {"dir": "images", "start": cfg["start_state_idx"], "eps": epsilon, "alpha": alpha, "approach": cfg['approach']}
+        plot_one(f"GridWorld_{cfg['world_type']}_{cfg['approach']}" + ("" if not cfg['task3'] else "_task3"), q_tr, q_te, cfg["num_actions"], filename_data)
+        plot_lens_one(cfg, qlens, cfg["num_actions"], filename_data)
         print(q_tr[-1])
     else:
         for epsilon, alpha in product(eps_list, alpha_list):
