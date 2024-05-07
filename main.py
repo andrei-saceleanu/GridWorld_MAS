@@ -24,6 +24,19 @@ def plot_for_env(env_name, q_tr, q_te, sarsa_tr, sarsa_te, dq_tr, dq_te, num_act
     plt.savefig(os.path.join(image_folder, f"{env_name}_{num_actions}_{'_'.join([k+'='+str(v) for k,v in x.items()])}.png"))
     plt.close()
 
+def plot_one(env_name, q_tr, q_te, num_actions, filename_data):
+    plt.figure()
+    fig, ax = plt.subplots(1, 2, sharey=True)
+    fig.suptitle(env_name)
+    ax[0].plot(list(range(len(q_tr))), q_tr, label="Q-Learning train")
+    ax[0].legend(loc="lower right")
+    ax[1].plot(list(range(len(q_te))), q_te, label="Q-Learning test")
+    ax[1].legend(loc="lower right")
+    image_folder = filename_data["dir"]
+    x = {k:v for k,v in filename_data.items() if k!="dir"}
+    plt.savefig(os.path.join(image_folder, f"{env_name}_{num_actions}_{'_'.join([k+'='+str(v) for k,v in x.items()])}.png"))
+    plt.close()
+    
 def plot_lens(cfg, qlens, slens, dqlens, num_actions, filename_data):
     plt.figure()
     plt.plot(list(range(len(qlens))), qlens, label="Q lengths")
@@ -33,6 +46,15 @@ def plot_lens(cfg, qlens, slens, dqlens, num_actions, filename_data):
     image_folder = filename_data["dir"]
     x = {k:v for k,v in filename_data.items() if k!="dir"}
     plt.savefig(os.path.join(image_folder, f"ep_lens_{cfg['world_type']}_{num_actions}_{'_'.join([k+'='+str(v) for k,v in x.items()])}.png"))
+    plt.close()
+
+def plot_lens_one(cfg, qlens, num_actions, filename_data):
+    plt.figure()
+    plt.plot(list(range(len(qlens))), qlens, label="Q lengths")
+    plt.legend()
+    image_folder = filename_data["dir"]
+    x = {k:v for k,v in filename_data.items() if k!="dir"}
+    plt.savefig(os.path.join(image_folder, f"task3_{cfg['approach']}_ep_lens_{cfg['world_type']}_{num_actions}_{'_'.join([k+'='+str(v) for k,v in x.items()])}.png"))
     plt.close()
     
 def getPolicies(qQ, sQ, dqQ, cfg, world, num_actions, filename_data):
@@ -85,10 +107,12 @@ def getPolicies(qQ, sQ, dqQ, cfg, world, num_actions, filename_data):
 def main():
 
     cfg = {
-        "num_actions": 8,
+        "num_actions": 4,
         "world_size": [7, 10],
-        "world_type": "B",
-        "start_state_idx": 0
+        "world_type": "A",
+        "start_state_idx": 0,
+        "task3": False,
+        "approach": 1
     }
     env = GridWorld(cfg=cfg)
 
@@ -96,26 +120,40 @@ def main():
     names = ["Q-Learning", "SARSA", "Double Q-Learning"]
 
     gamma = 0.999
-    num_steps = 20000
+    num_steps = 30_000
     eval_iter = 100
     eps_list = [0.1, 0.3, 0.5]
     alpha_list = [0.45, 0.75, 0.9]
     os.makedirs("images", exist_ok=True)
-    
-    for epsilon, alpha in product(eps_list, alpha_list):
-        print(f"EPS={epsilon}; ALPHA={alpha}")
-        for name in names:
-            if name == "Q-Learning":
-                q_tr, q_te, qlens, qQ = q_learning(env, gamma, epsilon, alpha, num_steps, eval_iter)
-            elif name == "SARSA":
-                sarsa_tr, sarsa_te, slens, sQ = sarsa(env, gamma, epsilon, alpha, num_steps, eval_iter)
-            elif name == "Double Q-Learning":
-                dq_tr, dq_te, dqlens, dqQ = double_q_learning(env, gamma, epsilon, alpha, num_steps, eval_iter)
+    if cfg['task3']:
+        num_steps = 1_000_000 # for task3
+        eval_iter = 100# for task3
+        epsilon = eps_list[0]
+        alpha = alpha_list[2]
+        if cfg['approach'] == 1:
+            q_tr, q_te, qlens, qQ = q_learning_3_ag_old(env, 0.9,  epsilon, alpha, num_steps, eval_iter)
+        else:
+            q_tr, q_te, qlens, qQ = q_learning_3_ag(env, 0.9,  epsilon, alpha, num_steps, eval_iter)
+        
+        filename_data = {"dir": "images", "start": cfg["start_state_idx"], "eps": epsilon, "alpha": alpha, "approach": cfg['approach']}
+        plot_one(f"GridWorld_{cfg['world_type']}_{cfg['approach']}" + ("" if not cfg['task3'] else "_task3"), q_tr, q_te, cfg["num_actions"], filename_data)
+        plot_lens_one(cfg, qlens, cfg["num_actions"], filename_data)
+        print(q_tr[-1])
+    else:
+        for epsilon, alpha in product(eps_list, alpha_list):
+            print(f"EPS={epsilon}; ALPHA={alpha}")
+            for name in names:
+                if name == "Q-Learning":
+                    q_tr, q_te, qlens, qQ = q_learning(env, gamma, epsilon, alpha, num_steps, eval_iter)
+                elif name == "SARSA":
+                    sarsa_tr, sarsa_te, slens, sQ = sarsa(env, gamma, epsilon, alpha, num_steps, eval_iter)
+                elif name == "Double Q-Learning":
+                    dq_tr, dq_te, dqlens, dqQ = double_q_learning(env, gamma, epsilon, alpha, num_steps, eval_iter)
 
-        filename_data = {"dir": "images", "start": cfg["start_state_idx"], "eps": epsilon, "alpha": alpha}
-        getPolicies(qQ, sQ, dqQ, cfg, cfg['world_type'], cfg["num_actions"], filename_data)
-        plot_for_env(f"GridWorld_{cfg['world_type']}", q_tr, q_te, sarsa_tr, sarsa_te, dq_tr, dq_te, cfg["num_actions"], filename_data)
-        plot_lens(cfg, qlens, slens, dqlens, cfg["num_actions"], filename_data)
+            filename_data = {"dir": "images", "start": cfg["start_state_idx"], "eps": epsilon, "alpha": alpha}
+            getPolicies(qQ, sQ, dqQ, cfg, cfg['world_type'], cfg["num_actions"], filename_data)
+            plot_for_env(f"GridWorld_{cfg['world_type']}", q_tr, q_te, sarsa_tr, sarsa_te, dq_tr, dq_te, cfg["num_actions"], filename_data)
+            plot_lens(cfg, qlens, slens, dqlens, cfg["num_actions"], filename_data)
 
 if __name__=="__main__":
     main()
