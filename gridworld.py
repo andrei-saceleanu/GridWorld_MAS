@@ -22,8 +22,7 @@ class GridWorld(gym.Env):
         self.start_states = [
             [0, self.h//2],
             [2, self.h-1],
-            [1, 0]
-            # [self.w - 1, self.h//2-1]
+            [self.w - 1, self.h//2-1]
         ]
         self.start_state_idx = cfg["start_state_idx"]
         self.cfg = cfg
@@ -97,7 +96,6 @@ class GridWorld(gym.Env):
                     self.curr_pos[i][1] + self.dy[actions[i]]
                 ]
                 if check_inside(next_pos[0], next_pos[1], self.w, self.h) and next_pos not in self.obstacles:
-                    # self.prev_pos[i] = self.curr_pos[i]
                     self.curr_pos[i] = next_pos
 
                 if self.curr_pos[i] == self.goal:
@@ -110,10 +108,8 @@ class GridWorld(gym.Env):
                 done = True
             if finishedNow == len(actions):
                 done = True
-                print("ALL together")
                 reward += 10 - 1.5 # decrease the 0.5 of each agent
-            # if reward != -3:
-                # print(reward)
+                
             return [self.w * self.curr_pos[i][1] + self.curr_pos[i][0] for i in range(len(actions))], reward, done, truncated, {}
         else:
             next_pos = [
@@ -151,10 +147,8 @@ class GridWorld(gym.Env):
                     self.curr_pos[i][1] + self.dy[action[i]]
                 ]
                 if check_inside(next_pos[0], next_pos[1], self.w, self.h) and next_pos not in self.obstacles:
-                    # self.prev_pos[i] = self.curr_pos[i]
                     self.curr_pos[i] = next_pos
 
-                # done = False
                 truncated = False
                 self.curr_steps += 1
                 
