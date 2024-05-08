@@ -96,7 +96,7 @@ def q_learning(env, gamma, epsilon, alpha, iterations, _evaluation_step = 100):
 
         ep_len = 0
         while not done:
-            action = eps_greedy_policy(env, Q, state, epsilon * (iterations - i)/iterations) #decay
+            action = eps_greedy_policy(env, Q, state, epsilon)
 
             next_state, reward, terminated, truncated, _ = env.step(action)
             done = terminated or truncated
@@ -137,7 +137,7 @@ def double_q_learning(env, gamma, epsilon, alpha, iterations, _evaluation_step =
 
         ep_len = 0
         while not done:
-            action = eps_greedy_policy_dql(env, Q1, Q2, state, epsilon * (iterations - i)/iterations)
+            action = eps_greedy_policy_dql(env, Q1, Q2, state, epsilon)
 
             next_state, reward, terminated, truncated, _ = env.step(action)
             done = terminated or truncated
@@ -177,11 +177,11 @@ def sarsa(env, gamma, epsilon, alpha, iterations, eval_iter = 100):
         done = False
         total_reward = 0
 
-        action = eps_greedy_policy(env, Q, state, epsilon * (iterations - i)/iterations)
+        action = eps_greedy_policy(env, Q, state, epsilon)
         ep_len = 0
         while not done:
             next_state, reward, terminated, truncated, _ = env.step(action)
-            next_action = eps_greedy_policy(env, Q, next_state, epsilon * (iterations - i)/iterations)
+            next_action = eps_greedy_policy(env, Q, next_state, epsilon)
             done = terminated or truncated
 
             total_reward += reward
@@ -220,7 +220,7 @@ def q_learning_3_ag(env, gamma, epsilon, alpha, iterations, _evaluation_step = 1
         terminated = [False, False, False]
         ep_len = 0
         while not done:
-            action1 = eps_greedy_policy(env, Q1, state, epsilon * (iterations - i)/iterations) #decay
+            action1 = eps_greedy_policy(env, Q1, state, epsilon)
             next_state, reward, terminated, truncated, _ = env.step(action1)
             next_state = next_state[0] * env.observation_space.n * env.observation_space.n  + next_state[1] * env.observation_space.n + next_state[2]
             
@@ -261,9 +261,9 @@ def q_learning_3_ag_old(env, gamma, epsilon, alpha, iterations, _evaluation_step
         terminated = [False, False, False]
         ep_len = 0
         while not done:
-            action1 = eps_greedy_policy(env, Q1, state[0], epsilon * (iterations - i)/iterations) #decay
-            action2 = eps_greedy_policy(env, Q2, state[1], epsilon * (iterations - i)/iterations) #decay
-            action3 = eps_greedy_policy(env, Q3, state[2], epsilon * (iterations - i)/iterations) #decay
+            action1 = eps_greedy_policy(env, Q1, state[0], epsilon)
+            action2 = eps_greedy_policy(env, Q2, state[1], epsilon)
+            action3 = eps_greedy_policy(env, Q3, state[2], epsilon)
             next_state, reward, terminated, truncated, _ = env.step([action1, action2, action3])
             done = all(terminated) or truncated
             total_reward += sum(reward)
